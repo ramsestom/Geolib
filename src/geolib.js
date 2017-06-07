@@ -6,6 +6,7 @@
 
     // Constants
     Geolib.TO_RAD = Math.PI / 180;
+	Geolib.PI_360 = Math.PI / 360;
     Geolib.TO_DEG = 180 / Math.PI;
     Geolib.PI_X2 = Math.PI * 2;
     Geolib.PI_DIV4 = Math.PI / 4;
@@ -79,6 +80,8 @@
     // Here comes the magic
     geolib.extend({
 
+		exactDistances: true,
+	
         decimal: {},
 
         sexagesimal: {},
@@ -218,6 +221,23 @@
 
         },
 
+		
+		/**
+		* @param    number    The value that need to be modified
+        * @param    number    The desired accuracy
+        * @return   integer   value truncated to the desired accuracy
+		*/
+		roundAccuracy: function(value, accuracy) {
+			return Math.floor(Math.round(value/accuracy)*accuracy);
+		}
+		
+				
+		
+		
+		setExactDistancesMode: function(val) {
+			this.exactDistances = val;
+		}
+		
         /**
         * Calculates geodetic distance between two points specified by latitude/longitude using
         * Vincenty inverse formula for ellipsoids
@@ -226,25 +246,18 @@
         *
         * @param    object    Start position {latitude: 123, longitude: 123}
         * @param    object    End position {latitude: 123, longitude: 123}
-        * @param    integer   Accuracy (in meters)
-        * @param    integer   Precision (in decimal cases)
+        * @param    boolean   set to true if coordinates are already in decimal format to speedup the computation a bit
         * @return   integer   Distance (in meters)
         */
-        getDistance: function(start, end, accuracy, precision) {
-
-            accuracy = Math.floor(accuracy) || 1;
-            precision = Math.floor(precision) || 0;
-
-            var s = this.coords(start);
-            var e = this.coords(end);
+        getDistance: function(start, end, raw) {
 
             var a = 6378137, b = 6356752.314245,  f = 1/298.257223563;  // WGS-84 ellipsoid params
-            var L = (e['longitude']-s['longitude']).toRad();
+            var L = (this.longitude(end,raw)-this.longitude(start,raw)).toRad();
 
             var cosSigma, sigma, sinAlpha, cosSqAlpha, cos2SigmaM, sinSigma;
 
-            var U1 = Math.atan((1-f) * Math.tan(parseFloat(s['latitude']).toRad()));
-            var U2 = Math.atan((1-f) * Math.tan(parseFloat(e['latitude']).toRad()));
+            var U1 = Math.atan((1-f) * Math.tan(this.latitude(start,raw).toRad()));
+            var U2 = Math.atan((1-f) * Math.tan(this.latitude(end,raw).toRad()));
             var sinU1 = Math.sin(U1), cosU1 = Math.cos(U1);
             var sinU2 = Math.sin(U2), cosU2 = Math.cos(U2);
 
@@ -347,7 +360,7 @@
 
             var distance = b * A * (sigma - deltaSigma);
 
-            distance = distance.toFixed(precision); // round to 1mm precision
+            //distance = distance.toFixed(precision); // round to 1mm precision
 
             //if (start.hasOwnProperty(elevation) && end.hasOwnProperty(elevation)) {
             if (typeof this.elevation(start) !== 'undefined' && typeof this.elevation(end) !== 'undefined') {
@@ -355,7 +368,7 @@
                 distance = Math.sqrt(distance * distance + climb * climb);
             }
 
-            return this.distance = Math.round(distance * Math.pow(10, precision) / accuracy) * accuracy / Math.pow(10, precision);
+            return this.distance = distance;
 
             /*
             // note: to return initial/final bearings in addition to distance, use something like:
@@ -406,6 +419,38 @@
 
         },
 
+		
+		/**
+        * Quickly Calculates the distance between two spots using the Haversine formula.
+        * This method is fast not completely accurate (consider the earth as a sphere rather than a spheroid)
+        *
+        * @param    object    Start position {latitude: 123, longitude: 123}
+        * @param    object    End position {latitude: 123, longitude: 123}
+		* @param    boolean   If positions coordinates are already decimal, set raw to true to avoid conversion and speedup the computation
+        * @return   integer   Distance (in meters)
+        */
+		getHaversineDistance: function(start, end, raw) {
+			const slat = this.latitude(start, raw);
+			const slon = this.longitude(start, raw);
+			const elat = this.latitude(end, raw);
+			const elon = this.longitude(end, raw);
+			
+			const cLat = Math.cos((slat + elat) * Geolib.PI_360);
+			const dLat = (elat - slat) * Geolib.PI_360;
+			const dLon = (elon - slon) * Geolib.PI_360;
+
+			const f = dLat * dLat + cLat * cLat * dLon * dLon;
+			const c = 2 * Math.atan2(Math.sqrt(f), Math.sqrt(1 - f));
+
+			return (this.radius * c);
+		}
+		
+		
+		
+		getDistance: function(start, end, raw) {
+			return (this.exactDistances ? getVincentyDistance(start, end, raw) : getHaversineDistance(start, end, raw));
+		}
+		
 
     /**
         * Calculates the center of a collection of geo coordinates
@@ -417,19 +462,16 @@
 
             var coordsArray = coords;
             if(typeof coords === 'object' && !(coords instanceof Array)) {
-
                 coordsArray = [];
-
                 for(var key in coords) {
                     coordsArray.push(
                         this.coords(coords[key])
                     );
                 }
-
             }
 
             if(!coordsArray.length) {
-                return false;
+                return null;
             }
 
             var X = 0.0;
@@ -734,7 +776,7 @@
         * @return       bool        true if the coordinate is within the given radius
         */
         isPointInCircle: function(latlng, center, radius) {
-            return this.getDistance(latlng, center) < radius;
+            return this.getDistance(latlng, center) <= radius;
         },
 
 
@@ -956,7 +998,7 @@
         */
         isPointInLine: function(point, start, end) {
 
-            return (this.getDistance(start, point, 1, 3)+this.getDistance(point, end, 1, 3)).toFixed(3)==this.getDistance(start, end, 1, 3);
+            return ( (this.getDistance(start, point)+this.getDistance(point, end)).toFixed(3)==this.getDistance(start, end).toFixed(3) );
         },
 
                 /**
@@ -981,9 +1023,9 @@
         * @return   float     distance from point to line
         */
         getDistanceFromLine: function(point, start, end) {
-            var d1 = this.getDistance(start, point, 1, 3);
-            var d2 = this.getDistance(point, end, 1, 3);
-            var d3 = this.getDistance(start, end, 1, 3);
+            var d1 = this.getDistance(start, point).toFixed(3);
+            var d2 = this.getDistance(point, end).toFixed(3);
+            var d3 = this.getDistance(start, end).toFixed(3);
             var distance = 0;
 
             // alpha is the angle between the line from start to point, and from start to end //
@@ -1125,18 +1167,19 @@
         /**
         * Converts a distance from meters to km, mm, cm, mi, ft, in or yd
         *
-        * @param        string      Format to be converted in
         * @param        float       Distance in meters
-        * @param        float       Decimal places for rounding (default: 4)
+        * @param        string      Format to be converted from
+		* @param        string      Format to be converted to
+		* @param        float       Decimal places for rounding (default: 4)
         * @return       float       Converted distance
         */
-        convertUnit: function(unit, distance, round) {
+        convertUnit: function(distance, inputunit, outputunit, round) {
 
             if(distance === 0) {
-
                 return 0;
 
-            } else if(typeof distance === 'undefined') {
+            }
+			else if(typeof distance === 'undefined') {
 
                 if(this.distance === null) {
                     throw new Error('No distance was given');
@@ -1148,15 +1191,19 @@
 
             }
 
-            unit = unit || 'm';
+            inputunit = inputunit || 'm';
+			outputunit = outputunit || 'm';
+			
             round = (null == round ? 4 : round);
 
-            if(typeof this.measures[unit] !== 'undefined') {
-                return this.round(distance * this.measures[unit], round);
-            } else {
-                throw new Error('Unknown unit for conversion.');
-            }
-
+			if(typeof this.measures[inputunit] === 'undefined') {
+				throw new Error('Unknown input unit for conversion.');
+			}
+			if(typeof this.measures[outputunit] === 'undefined') {
+				throw new Error('Unknown output unit for conversion.');
+			}
+			
+            return this.round(distance/this.measures[inputunit] * this.measures[outputunit], round);
         },
 
 
