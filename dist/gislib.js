@@ -1,4 +1,13 @@
-;(function(global, undefined) {
+/*! gislib 2.0.22 by ramsestom
+* Library to provide geo functions like distance calculation,
+* conversion of decimal coordinates to sexagesimal and vice versa, etc.
+* WGS 84 (World Geodetic System 1984)
+* 
+* @author ramsestom
+* @url 
+* @version 2.0.22
+* @license MIT 
+**/;(function(global, undefined) {
 
     "use strict";
 
@@ -14,7 +23,7 @@
     // Setting readonly defaults
     var geolib = Object.create(Geolib.prototype, {
         version: {
-            value: "$version$"
+            value: "2.0.22"
         },
         radius: {
             value: 6378137
@@ -136,6 +145,28 @@
 
         },
 
+		
+		/*
+		* Automatically convert to a geopoint of the form {latitude:decimal, longitude:decimal, elevation:decimal} that can be used by the various functions
+		*/
+		toGeoPoint: function(point) {
+			
+			var retval = {
+                latitude: this.useDecimal(point[this.getKeys(point).latitude]),
+                longitude: this.useDecimal(point[this.getKeys(point).longitude])
+            };
+
+            var elev = point[this.getKeys(point).elevation];
+            if(typeof elev !== 'undefined') {
+                retval.elevation = elev;
+            }
+
+            return retval;
+		},
+		
+		
+		/*
+		
         // returns latitude of a given point, converted to decimal
         // set raw to true to avoid conversion
         getLat: function(point, raw) {
@@ -166,8 +197,8 @@
         elevation: function(point) {
             return this.getElev.call(this, point);
         },
-
-        coords: function(point, raw) {
+		        
+		coords: function(point, raw) {
 
             var retval = {
                 latitude: raw === true ? point[this.getKeys(point).latitude] : this.useDecimal(point[this.getKeys(point).latitude]),
@@ -188,7 +219,9 @@
         ll: function(point, raw) {
             return this.coords.call(this, point, raw);
         },
-
+		
+		*/
+		
 
         // checks if a variable contains a valid latlong object
         validate: function(point) {
@@ -242,20 +275,19 @@
         * Vincenty Inverse Solution of Geodesics on the Ellipsoid (c) Chris Veness 2002-2010
         * (Licensed under CC BY 3.0)
         *
-        * @param    object    Start position {latitude: 123, longitude: 123}
-        * @param    object    End position {latitude: 123, longitude: 123}
-        * @param    boolean   set to true if coordinates are already in decimal format to speedup the computation a bit
+        * @param    geopoint  Start position {latitude: 123, longitude: 123}
+        * @param    geopoint  End position {latitude: 123, longitude: 123}
         * @return   integer   Distance (in meters)
         */
-        getVincentyDistance: function(start, end, raw) {
+        getVincentyDistance: function(start, end) {
 
             var a = 6378137, b = 6356752.314245,  f = 1/298.257223563;  // WGS-84 ellipsoid params
-            var L = (this.longitude(end,raw)-this.longitude(start,raw)).toRad();
+            var L = (end.longitude-start.longitude).toRad();
 
             var cosSigma, sigma, sinAlpha, cosSqAlpha, cos2SigmaM, sinSigma;
 
-            var U1 = Math.atan((1-f) * Math.tan(this.latitude(start,raw).toRad()));
-            var U2 = Math.atan((1-f) * Math.tan(this.latitude(end,raw).toRad()));
+            var U1 = Math.atan((1-f) * Math.tan(start.latitude.toRad()));
+            var U2 = Math.atan((1-f) * Math.tan(end.latitude.toRad()));
             var sinU1 = Math.sin(U1), cosU1 = Math.cos(U1);
             var sinU2 = Math.sin(U2), cosU2 = Math.cos(U2);
 
@@ -276,7 +308,7 @@
                     )
                 );
                 if (sinSigma === 0) {
-                    return geolib.distance = 0;  // co-incident points
+                    return 0;  // co-incident points
                 }
 
                 cosSigma = sinU1 * sinU2 + cosU1 * cosU2 * cosLambda;
@@ -361,12 +393,12 @@
             //distance = distance.toFixed(precision); // round to 1mm precision
 
             //if (start.hasOwnProperty(elevation) && end.hasOwnProperty(elevation)) {
-            if (typeof this.elevation(start) !== 'undefined' && typeof this.elevation(end) !== 'undefined') {
-                var climb = Math.abs(this.elevation(start) - this.elevation(end));
+            if (typeof start.elevation !== 'undefined' && typeof end.elevation !== 'undefined') {
+                var climb = Math.abs(start.elevation - end.elevation);
                 distance = Math.sqrt(distance * distance + climb * climb);
             }
 
-            return this.distance = distance;
+            return distance;
 
             /*
             // note: to return initial/final bearings in addition to distance, use something like:
@@ -378,45 +410,6 @@
 
         },
 
-
-        /**
-        * Calculates the distance between two spots.
-        * This method is more simple but also far more inaccurate
-        *
-        * @param    object    Start position {latitude: 123, longitude: 123}
-        * @param    object    End position {latitude: 123, longitude: 123}
-        * @param    integer   Accuracy (in meters)
-        * @return   integer   Distance (in meters)
-        */
-        getDistanceSimple: function(start, end, accuracy) {
-
-            accuracy = Math.floor(accuracy) || 1;
-
-            var distance =
-                Math.round(
-                    Math.acos(
-                        Math.sin(
-                            this.latitude(end).toRad()
-                        ) *
-                        Math.sin(
-                            this.latitude(start).toRad()
-                        ) +
-                        Math.cos(
-                            this.latitude(end).toRad()
-                        ) *
-                        Math.cos(
-                            this.latitude(start).toRad()
-                        ) *
-                        Math.cos(
-                            this.longitude(start).toRad() - this.longitude(end).toRad()
-                        )
-                    ) * this.radius
-                );
-
-            return geolib.distance = Math.floor(Math.round(distance/accuracy)*accuracy);
-
-        },
-
 		
 		/**
         * Quickly Calculates the distance between two spots using the Haversine formula.
@@ -424,18 +417,12 @@
         *
         * @param    object    Start position {latitude: 123, longitude: 123}
         * @param    object    End position {latitude: 123, longitude: 123}
-		* @param    boolean   If positions coordinates are already decimal, set raw to true to avoid conversion and speedup the computation
-        * @return   integer   Distance (in meters)
+	    * @return   integer   Distance (in meters)
         */
-		getHaversineDistance: function(start, end, raw) {
-			const slat = this.latitude(start, raw);
-			const slon = this.longitude(start, raw);
-			const elat = this.latitude(end, raw);
-			const elon = this.longitude(end, raw);
-			
-			const cLat = Math.cos((slat + elat) * Geolib.PI_360);
-			const dLat = (elat - slat) * Geolib.PI_360;
-			const dLon = (elon - slon) * Geolib.PI_360;
+		getHaversineDistance: function(start, end) {
+			const cLat = Math.cos((start.latitude + end.latitude) * Geolib.PI_360);
+			const dLat = (end.latitude - start.latitude) * Geolib.PI_360;
+			const dLon = (end.longitude - start.longitude) * Geolib.PI_360;
 
 			const f = dLat * dLat + cLat * cLat * dLon * dLon;
 			const c = 2 * Math.atan2(Math.sqrt(f), Math.sqrt(1 - f));
@@ -479,8 +466,8 @@
 
             coordsArray.forEach(function(coord) {
 
-                lat = this.latitude(coord).toRad();
-                lon = this.longitude(coord).toRad();
+                lat = coord.latitude.toRad();
+                lon = coord.longitude.toRad();
 
                 X += Math.cos(lat) * Math.cos(lon);
                 Y += Math.cos(lat) * Math.sin(lon);
@@ -521,7 +508,7 @@
                 return false;
             }
 
-            var useElevation = this.elevation(coords[0]);
+            var useElevation = coords[0].elevation;
 
             var stats = {
                 maxLat: -Infinity,
@@ -537,14 +524,14 @@
 
             for (var i = 0, l = coords.length; i < l; ++i) {
 
-                stats.maxLat = Math.max(this.latitude(coords[i]), stats.maxLat);
-                stats.minLat = Math.min(this.latitude(coords[i]), stats.minLat);
-                stats.maxLng = Math.max(this.longitude(coords[i]), stats.maxLng);
-                stats.minLng = Math.min(this.longitude(coords[i]), stats.minLng);
+                stats.maxLat = Math.max(coords[i].latitude, stats.maxLat);
+                stats.minLat = Math.min(coords[i].latitude, stats.minLat);
+                stats.maxLng = Math.max(coords[i].longitude, stats.maxLng);
+                stats.minLng = Math.min(coords[i].longitude, stats.minLng);
 
                 if (useElevation) {
-                    stats.maxElev = Math.max(this.elevation(coords[i]), stats.maxElev);
-                    stats.minElev = Math.min(this.elevation(coords[i]), stats.minElev);
+                    stats.maxElev = Math.max(coords[i].elevation, stats.maxElev);
+                    stats.minElev = Math.min(coords[i].elevation, stats.minElev);
                 }
 
             }
@@ -589,11 +576,8 @@
         */
         getBoundsOfDistance: function(point, distance) {
 
-            var latitude = this.latitude(point);
-            var longitude = this.longitude(point);
-
-            var radLat = latitude.toRad();
-            var radLon = longitude.toRad();
+            var radLat = point.latitude.toRad();
+            var radLon = point.longitude.toRad();
 
             var radDist = distance / this.radius;
             var minLat = radLat - radDist;
@@ -660,14 +644,11 @@
 
                 if(
                     (
-                        (this.longitude(coords[i]) <= this.longitude(latlng) && this.longitude(latlng) < this.longitude(coords[j])) ||
-                        (this.longitude(coords[j]) <= this.longitude(latlng) && this.longitude(latlng) < this.longitude(coords[i]))
+                        (coords[i].longitude <= latlng.longitude && latlng.longitude < coords[j].longitude) ||
+                        (coords[j].longitude <= latlng.longitude && latlng.longitude < coords[i].longitude)
                     ) &&
                     (
-                        this.latitude(latlng) < (this.latitude(coords[j]) - this.latitude(coords[i])) *
-                        (this.longitude(latlng) - this.longitude(coords[i])) /
-                        (this.longitude(coords[j]) - this.longitude(coords[i])) +
-                        this.latitude(coords[i])
+                        latlng.latitude < (coords[j].latitude - coords[i].latitude) * (latlng.longitude - coords[i].longitude) / (coords[j].longitude - coords[i].longitude) + coords[i].latitude
                     )
                 ) {
                     c = !c;
@@ -690,27 +671,27 @@
 
             for(var i = 0, j = coords.length-1; i < coords.length; i++) {
 
-            if(this.longitude(coords[j]) === this.longitude(coords[i])) {
+            if(coords[j].longitude === coords[i].longitude) {
 
-                    coords[i].constant = this.latitude(coords[i]);
+                    coords[i].constant = coords[i].latitude;
                     coords[i].multiple = 0;
 
                 } else {
 
-                    coords[i].constant = this.latitude(coords[i]) - (
-                        this.longitude(coords[i]) * this.latitude(coords[j])
+                    coords[i].constant = coords[i].latitude - (
+                        coords[i].longitude * coords[j].latitude
                     ) / (
-                        this.longitude(coords[j]) - this.longitude(coords[i])
+                        coords[j].longitude - coords[i].longitude
                     ) + (
-                        this.longitude(coords[i])*this.latitude(coords[i])
+                        coords[i].longitude*coords[i].latitude
                     ) / (
-                        this.longitude(coords[j])-this.longitude(coords[i])
+                        coords[j].longitude-coords[i].longitude
                     );
 
                     coords[i].multiple = (
-                        this.latitude(coords[j])-this.latitude(coords[i])
+                        coords[j].latitude-coords[i].latitude
                     ) / (
-                        this.longitude(coords[j])-this.longitude(coords[i])
+                        coords[j].longitude-coords[i].longitude
                     );
 
                 }
@@ -736,13 +717,13 @@
         isPointInsideWithPreparedPolygon: function(point, coords) {
 
             var flgPointInside = false,
-            y = this.longitude(point),
-            x = this.latitude(point);
+            y = point.longitude,
+            x = point.latitude;
 
             for(var i = 0, j = coords.length-1; i < coords.length; i++) {
 
-                if ((this.longitude(coords[i]) < y && this.longitude(coords[j]) >=y ||
-                    this.longitude(coords[j]) < y && this.longitude(coords[i]) >= y)) {
+                if ((coords[i].longitude < y && coords[j].longitude >=y ||
+                    coords[j].longitude < y && coords[i].longitude >= y)) {
 
                     flgPointInside^=(y*coords[i].multiple+coords[i].constant < x);
 
@@ -773,8 +754,8 @@
         * @param        integer     maximum radius in meters
         * @return       bool        true if the coordinate is within the given radius
         */
-        isPointInCircle: function(latlng, center, radius) {
-            return this.getDistance(latlng, center) <= radius;
+        isPointInCircle: function(point, center, radius) {
+            return this.getDistance(point, center) <= radius;
         },
 
 
@@ -802,15 +783,15 @@
         getRhumbLineBearing: function(originLL, destLL) {
 
             // difference of longitude coords
-            var diffLon = this.longitude(destLL).toRad() - this.longitude(originLL).toRad();
+            var diffLon = destLL.longitude.toRad() - originLL.longitude.toRad();
 
             // difference latitude coords phi
             var diffPhi = Math.log(
                 Math.tan(
-                    this.latitude(destLL).toRad() / 2 + Geolib.PI_DIV4
+                    destLL.latitude.toRad() / 2 + Geolib.PI_DIV4
                 ) /
                 Math.tan(
-                    this.latitude(originLL).toRad() / 2 + Geolib.PI_DIV4
+                    originLL.latitude.toRad() / 2 + Geolib.PI_DIV4
                 )
             );
 
@@ -839,35 +820,30 @@
         */
         getBearing: function(originLL, destLL) {
 
-            destLL['latitude'] = this.latitude(destLL);
-            destLL['longitude'] = this.longitude(destLL);
-            originLL['latitude'] = this.latitude(originLL);
-            originLL['longitude'] = this.longitude(originLL);
-
             var bearing = (
                 (
                     Math.atan2(
                         Math.sin(
-                            destLL['longitude'].toRad() -
-                            originLL['longitude'].toRad()
+                            destLL.longitude.toRad() -
+                            originLL.longitude.toRad()
                         ) *
                         Math.cos(
-                            destLL['latitude'].toRad()
+                            destLL.latitude.toRad()
                         ),
                         Math.cos(
-                            originLL['latitude'].toRad()
+                            originLL.latitude.toRad()
                         ) *
                         Math.sin(
-                            destLL['latitude'].toRad()
+                            destLL.latitude.toRad()
                         ) -
                         Math.sin(
-                            originLL['latitude'].toRad()
+                            originLL.latitude.toRad()
                         ) *
                         Math.cos(
-                            destLL['latitude'].toRad()
+                            destLL.latitude.toRad()
                         ) *
                         Math.cos(
-                            destLL['longitude'].toRad() - originLL['longitude'].toRad()
+                            destLL.longitude.toRad() - originLL.longitude.toRad()
                         )
                     )
                 ).toDeg() + 360
@@ -1137,16 +1113,13 @@
          */
         computeDestinationPoint: function(start, distance, bearing, radius) {
 
-            var lat = this.latitude(start);
-            var lng = this.longitude(start);
-
             radius = (typeof radius === 'undefined') ? this.radius : Number(radius);
 
             var δ = Number(distance) / radius; // angular distance in radians
             var θ = Number(bearing).toRad();
 
-            var φ1 = Number(lat).toRad();
-            var λ1 = Number(lng).toRad();
+            var φ1 = Number(start.latitude).toRad();
+            var λ1 = Number(start.longitude).toRad();
 
             var φ2 = Math.asin( Math.sin(φ1)*Math.cos(δ) +
                 Math.cos(φ1)*Math.sin(δ)*Math.cos(θ) );
