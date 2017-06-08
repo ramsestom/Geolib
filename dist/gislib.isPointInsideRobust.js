@@ -1,7 +1,7 @@
-/*! geolib.isPointInsideRobust 2.0.22
+/*! gislib.isPointInsideRobust 2.0.22
 * !!EXPERIMENTAL!!
 *
-* Robust version of isPointInside for Geolib.js
+* Robust version of isPointInside for gislib.js
 *
 * Based on https://github.com/mikolalysenko/robust-point-in-polygon
 * by Mikola Lysenko, licensed under MIT
@@ -12,9 +12,9 @@
 * @license MIT
 *
 */
-;(function(global, geolib, undefined) {
+;(function(global, gislib, undefined) {
 
-    var addOn = function(geolib) {
+    var addOn = function(gislib) {
 
         var SPLITTER = +(Math.pow(2, 27) + 1.0);
 
@@ -590,11 +590,11 @@
         generateOrientationProc();
 
         var robustPointInPolygon = function(vs, point) {
-            // transform from geolib format to array syntax
-            var x = geolib.longitude(point);
-            var y = geolib.latitude(point);
+            // transform from gislib format to array syntax
+            var x = gislib.longitude(point);
+            var y = gislib.latitude(point);
             var coords = vs.map(function(coords) {
-                return [geolib.longitude(coords), geolib.latitude(coords)];
+                return [gislib.longitude(coords), gislib.latitude(coords)];
             });
 
             vs = coords;
@@ -721,24 +721,24 @@
 	if (typeof module !== 'undefined' &&
 		typeof module.exports !== 'undefined') {
 
-        module.exports = function(geolib) {
-            geolib.extend(addOn(geolib), true);
-            return geolib;
+        module.exports = function(gislib) {
+            gislib.extend(addOn(gislib), true);
+            return gislib;
         };
 
 	// AMD module
 	} else if (typeof define === "function" && define.amd) {
 
-		define(["geolib"], function (geolib) {
-			geolib.extend(addOn(geolib), true);
-			return geolib;
+		define(["gislib"], function (gislib) {
+			gislib.extend(addOn(gislib), true);
+			return gislib;
 		});
 
 	// we're in a browser
 	} else {
 
-		geolib.extend(addOn(geolib), true);
+		gislib.extend(addOn(gislib), true);
 
 	}
 
-}(this, this.geolib));
+}(this, this.gislib));

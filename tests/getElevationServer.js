@@ -1,7 +1,7 @@
 /*global require:true describe:true it:true*/
-var util = require('util'), http = require('http'), geolib = require('../geolib');
+var util = require('util'), http = require('http'), gislib = require('../gislib');
 
-describe('Geolib', function() {
+describe('Gislib', function() {
   describe('getElevationServer', function() {
     it('should getElevation for three points', function(done) {
       var coords = [
@@ -9,7 +9,7 @@ describe('Geolib', function() {
         {"lat":40.79938945887229,"lng":-111.76680525603354},
         {"lat":40.80354,"lng":-111.77384999999998}
       ];
-      geolib.getElevation(coords, function (err, results){
+      gislib.getElevation(coords, function (err, results){
         if (err){
           throw new Error("Could not get elevation");
         } else {

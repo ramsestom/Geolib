@@ -11,17 +11,17 @@
 
     "use strict";
 
-    function Geolib() {}
+    function Gislib() {}
 
     // Constants
-    Geolib.TO_RAD = Math.PI / 180;
-	Geolib.PI_360 = Math.PI / 360;
-    Geolib.TO_DEG = 180 / Math.PI;
-    Geolib.PI_X2 = Math.PI * 2;
-    Geolib.PI_DIV4 = Math.PI / 4;
+    Gislib.TO_RAD = Math.PI / 180;
+	Gislib.PI_360 = Math.PI / 360;
+    Gislib.TO_DEG = 180 / Math.PI;
+    Gislib.PI_X2 = Math.PI * 2;
+    Gislib.PI_DIV4 = Math.PI / 4;
 
     // Setting readonly defaults
-    var geolib = Object.create(Geolib.prototype, {
+    var gislib = Object.create(Gislib.prototype, {
         version: {
             value: "2.0.22"
         },
@@ -57,16 +57,16 @@
             })
         },
         prototype: {
-            value: Geolib.prototype
+            value: Gislib.prototype
         },
         extend: {
             value: function(methods, overwrite) {
                 for(var prop in methods) {
-                    if(typeof geolib.prototype[prop] === 'undefined' || overwrite === true) {
+                    if(typeof gislib.prototype[prop] === 'undefined' || overwrite === true) {
                         if(typeof methods[prop] === 'function' && typeof methods[prop].bind === 'function') {
-                            geolib.prototype[prop] = methods[prop].bind(geolib);
+                            gislib.prototype[prop] = methods[prop].bind(gislib);
                         } else {
-                            geolib.prototype[prop] = methods[prop];
+                            gislib.prototype[prop] = methods[prop];
                         }
                     }
                 }
@@ -76,18 +76,18 @@
 
     if (typeof(Number.prototype.toRad) === 'undefined') {
         Number.prototype.toRad = function() {
-            return this * Geolib.TO_RAD;
+            return this * Gislib.TO_RAD;
         };
     }
 
     if (typeof(Number.prototype.toDeg) === 'undefined') {
         Number.prototype.toDeg = function() {
-            return this * Geolib.TO_DEG;
+            return this * Gislib.TO_DEG;
         };
     }
 
     // Here comes the magic
-    geolib.extend({
+    gislib.extend({
 
 		exactDistances: true,
 	
@@ -420,9 +420,9 @@
 	    * @return   integer   Distance (in meters)
         */
 		getHaversineDistance: function(start, end) {
-			const cLat = Math.cos((start.latitude + end.latitude) * Geolib.PI_360);
-			const dLat = (end.latitude - start.latitude) * Geolib.PI_360;
-			const dLon = (end.longitude - start.longitude) * Geolib.PI_360;
+			const cLat = Math.cos((start.latitude + end.latitude) * Gislib.PI_360);
+			const dLat = (end.latitude - start.latitude) * Gislib.PI_360;
+			const dLon = (end.longitude - start.longitude) * Gislib.PI_360;
 
 			const f = dLat * dLat + cLat * cLat * dLon * dLon;
 			const c = 2 * Math.atan2(Math.sqrt(f), Math.sqrt(1 - f));
@@ -485,8 +485,8 @@
             lat = Math.atan2(Z, hyp);
 
             return {
-                latitude: (lat * Geolib.TO_DEG).toFixed(6),
-                longitude: (lon * Geolib.TO_DEG).toFixed(6)
+                latitude: (lat * Gislib.TO_DEG).toFixed(6),
+                longitude: (lon * Gislib.TO_DEG).toFixed(6)
             };
 
         },
@@ -597,13 +597,13 @@
                 minLon = radLon - deltaLon;
 
                 if (minLon < MIN_LON_RAD) {
-                    minLon += Geolib.PI_X2;
+                    minLon += Gislib.PI_X2;
                 }
 
                 maxLon = radLon + deltaLon;
 
                 if (maxLon > MAX_LON_RAD) {
-                    maxLon -= Geolib.PI_X2;
+                    maxLon -= Gislib.PI_X2;
                 }
 
             } else {
@@ -739,7 +739,7 @@
 
 
         /**
-        * Shortcut for geolib.isPointInside()
+        * Shortcut for gislib.isPointInside()
         */
         isInside: function() {
             return this.isPointInside.apply(this, arguments);
@@ -760,7 +760,7 @@
 
 
         /**
-        * Shortcut for geolib.isPointInCircle()
+        * Shortcut for gislib.isPointInCircle()
         */
         withinRadius: function() {
             return this.isPointInCircle.apply(this, arguments);
@@ -788,20 +788,20 @@
             // difference latitude coords phi
             var diffPhi = Math.log(
                 Math.tan(
-                    destLL.latitude.toRad() / 2 + Geolib.PI_DIV4
+                    destLL.latitude.toRad() / 2 + Gislib.PI_DIV4
                 ) /
                 Math.tan(
-                    originLL.latitude.toRad() / 2 + Geolib.PI_DIV4
+                    originLL.latitude.toRad() / 2 + Gislib.PI_DIV4
                 )
             );
 
             // recalculate diffLon if it is greater than pi
             if(Math.abs(diffLon) > Math.PI) {
                 if(diffLon > 0) {
-                    diffLon = (Geolib.PI_X2 - diffLon) * -1;
+                    diffLon = (Gislib.PI_X2 - diffLon) * -1;
                 }
                 else {
-                    diffLon = Geolib.PI_X2 + diffLon;
+                    diffLon = Gislib.PI_X2 + diffLon;
                 }
             }
 
@@ -1089,7 +1089,7 @@
                 unit = 'km';
             }
 
-            var distance = geolib.getDistance(start, end);
+            var distance = gislib.getDistance(start, end);
             var time = ((end.time*1)/1000) - ((start.time*1)/1000);
             var mPerHr = (distance/time)*3600;
             var speed = Math.round(mPerHr * this.measures[unit] * 10000)/10000;
@@ -1188,34 +1188,34 @@
 
             if(Object.prototype.toString.call(value) === '[object Array]') {
 
-                var geolib = this;
+                var gislib = this;
 
                 value = value.map(function(val) {
 
                     //if(!isNaN(parseFloat(val))) {
-                    if(geolib.isDecimal(val)) {
+                    if(gislib.isDecimal(val)) {
 
-                        return geolib.useDecimal(val);
+                        return gislib.useDecimal(val);
 
                     } else if(typeof val == 'object') {
 
-                        if(geolib.validate(val)) {
+                        if(gislib.validate(val)) {
 
-                            return geolib.coords(val);
+                            return gislib.coords(val);
 
                         } else {
 
                             for(var prop in val) {
-                                val[prop] = geolib.useDecimal(val[prop]);
+                                val[prop] = gislib.useDecimal(val[prop]);
                             }
 
                             return val;
 
                         }
 
-                    } else if(geolib.isSexagesimal(val)) {
+                    } else if(gislib.isSexagesimal(val)) {
 
-                        return geolib.sexagesimal2decimal(val);
+                        return gislib.sexagesimal2decimal(val);
 
                     } else {
 
@@ -1363,24 +1363,24 @@
     // Node module
     if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
 
-        module.exports = geolib;
+        module.exports = gislib;
 
         // react native
         if (typeof global === 'object') {
-          global.geolib = geolib;
+          global.gislib = gislib;
         }
 
     // AMD module
     } else if (typeof define === "function" && define.amd) {
 
-        define("geolib", [], function () {
-            return geolib;
+        define("gislib", [], function () {
+            return gislib;
         });
 
     // we're in a browser
     } else {
 
-        global.geolib = geolib;
+        global.gislib = gislib;
 
     }
 

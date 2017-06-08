@@ -1,17 +1,17 @@
-/*! geolib.elevation 2.0.22 by Manuel Bieh
+/*! gislib.elevation 2.0.22 by Manuel Bieh
 *
-* Elevation Addon for Geolib.js
+* Elevation Addon for gislib.js
 * 
 * @author Manuel Bieh
 * @url http://www.manuelbieh.com/
 * @version 2.0.22
 * @license MIT
 */
-;(function(global, geolib, undefined) {
+;(function(global, gislib, undefined) {
 
 	var elevation = {
 
-		/*global google:true geolib:true require:true module:true elevationResult:true */
+		/*global google:true gislib:true require:true module:true elevationResult:true */
 
 		/**
 		*  @param      Array Collection of coords [{latitude: 51.510, longitude: 7.1321}, {latitude: 49.1238, longitude: "8° 30' W"}, ...]
@@ -56,10 +56,10 @@
 			};
 
 			var elevationService = new google.maps.ElevationService();
-			var geolib = this;
+			var gislib = this;
 
 			elevationService.getElevationAlongPath(positionalRequest, function (results, status) {
-				geolib.elevationHandler(results, status, coords, cb);
+				gislib.elevationHandler(results, status, coords, cb);
 			});
 
 		},
@@ -84,10 +84,10 @@
 				);
 			}
 
-			var geolib = this;
+			var gislib = this;
 
 			gm.elevationFromPath(path.join('|'), path.length, function(err, results) {
-				geolib.elevationHandler(results.results, results.status, coords, cb);
+				gislib.elevationHandler(results.results, results.status, coords, cb);
 			});
 
 		},
@@ -169,22 +169,22 @@
 	if (typeof module !== 'undefined' && 
 		typeof module.exports !== 'undefined') {
 
-		geolib = require('geolib');
-		geolib.extend(elevation);
+		gislib = require('gislib');
+		gislib.extend(elevation);
 
 	// AMD module
 	} else if (typeof define === "function" && define.amd) {
 
-		define(["geolib"], function (geolib) {
-			geolib.extend(elevation);
-			return geolib;
+		define(["gislib"], function (gislib) {
+			gislib.extend(elevation);
+			return gislib;
 		});
 
 	// we're in a browser
 	} else {
 
-		geolib.extend(elevation);
+		gislib.extend(elevation);
 
 	}
 
-}(this, this.geolib));
+}(this, this.gislib));
