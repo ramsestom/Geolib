@@ -18,7 +18,7 @@ module.exports = function(grunt) {
 		'* @version <%= pkg.version %>\n' +
 		'* @license <%= _.pluck(pkg.licenses, "type").join(", ") %> \n**/',
 		lint: {
-			files: ['src/geolib.js']
+			files: ['src/gislib.js']
 		},
 		qunit: {
 			files: ['tests/*.html']
@@ -29,8 +29,8 @@ module.exports = function(grunt) {
 					banner: '<%= banner %>',
 					report: false
 				},
-				src: ['src/geolib.js'],
-				dest: 'dist/geolib.js'
+				src: ['src/gislib.js'],
+				dest: 'dist/gislib.js'
 			}
 		},
 		copy: {
@@ -42,14 +42,14 @@ module.exports = function(grunt) {
 			},
 			elev: {
 				files: [{
-					src: ['src/geolib.elevation.js'],
-					dest: 'dist/geolib.elevation.js'
+					src: ['src/gislib.elevation.js'],
+					dest: 'dist/gislib.elevation.js'
 				}]
 			},
 			pointInside: {
 				files: [{
-					src: ['src/geolib.isPointInsideRobust.js'],
-					dest: 'dist/geolib.isPointInsideRobust.js'
+					src: ['src/gislib.isPointInsideRobust.js'],
+					dest: 'dist/gislib.isPointInsideRobust.js'
 				}]
 			},
 		},
@@ -77,17 +77,17 @@ module.exports = function(grunt) {
 			},
 			main: {
 				files: {
-					'dist/geolib.min.js': ['dist/geolib.js']
+					'dist/gislib.min.js': ['dist/gislib.js']
 				}
 			},
 			elev: {
 				files: {
-					'dist/geolib.elevation.min.js': ['dist/geolib.elevation.js']
+					'dist/gislib.elevation.min.js': ['dist/gislib.elevation.js']
 				}
 			},
 			pointInside: {
 				files: {
-					'dist/geolib.isPointInsideRobust.min.js': ['dist/geolib.isPointInsideRobust.js']
+					'dist/gislib.isPointInsideRobust.min.js': ['dist/gislib.isPointInsideRobust.js']
 				}
 			},
 		},
@@ -99,9 +99,9 @@ module.exports = function(grunt) {
 		},
 		jshint: {
 			all: [
-				'src/geolib.js',
-				'src/geolib.elevation.js',
-				'src/geolib.isPointInsideRobust.js',
+				'src/gislib.js',
+				'src/gislib.elevation.js',
+				'src/gislib.isPointInsideRobust.js',
 			],
 			options: {
 				curly: true,

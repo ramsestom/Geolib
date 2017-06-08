@@ -229,14 +229,12 @@
 		*/
 		roundAccuracy: function(value, accuracy) {
 			return Math.floor(Math.round(value/accuracy)*accuracy);
-		}
-		
-				
+		},
 		
 		
 		setExactDistancesMode: function(val) {
 			this.exactDistances = val;
-		}
+		},
 		
         /**
         * Calculates geodetic distance between two points specified by latitude/longitude using
@@ -249,7 +247,7 @@
         * @param    boolean   set to true if coordinates are already in decimal format to speedup the computation a bit
         * @return   integer   Distance (in meters)
         */
-        getDistance: function(start, end, raw) {
+        getVincentyDistance: function(start, end, raw) {
 
             var a = 6378137, b = 6356752.314245,  f = 1/298.257223563;  // WGS-84 ellipsoid params
             var L = (this.longitude(end,raw)-this.longitude(start,raw)).toRad();
@@ -443,13 +441,13 @@
 			const c = 2 * Math.atan2(Math.sqrt(f), Math.sqrt(1 - f));
 
 			return (this.radius * c);
-		}
+		},
 		
 		
 		
 		getDistance: function(start, end, raw) {
 			return (this.exactDistances ? getVincentyDistance(start, end, raw) : getHaversineDistance(start, end, raw));
-		}
+		},
 		
 
     /**
@@ -1386,6 +1384,9 @@
 
     });
 
+	
+	
+	
     // Node module
     if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
 

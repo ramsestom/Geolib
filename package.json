@@ -1,13 +1,12 @@
 {
-  "name": "geolib",
-  "homepage": "http://github.com/manuelbieh/Geolib",
+  "name": "gislib",
+  "homepage": "http://github.com/ramsestom/Gislib",
   "author": {
-    "name": "Manuel Bieh",
-    "url": "http://www.manuelbieh.com/"
+	"name": "ramsestom"
   },
   "repository": {
     "type": "git",
-    "url": "http://github.com/manuelbieh/geolib.git"
+    "url": "http://github.com/ramsestom/gislib.git"
   },
   "devDependencies": {
     "eslint-config-wiremore": "^1.0.3",
@@ -32,9 +31,9 @@
     }
   ],
   "files": [
-    "dist/geolib.d.ts",
-    "dist/geolib.js",
-    "dist/geolib.elevation.js"
+    "dist/gislib.d.ts",
+    "dist/gislib.js",
+    "dist/gislib.elevation.js"
   ],
   "description": "Library to perform geo specific tasks",
   "keywords": [
@@ -56,6 +55,6 @@
     "build": "grunt build"
   },
   "version": "2.0.22",
-  "typings": "dist/geolib.d.ts",
-  "main": "dist/geolib.js"
+  "typings": "dist/gislib.d.ts",
+  "main": "dist/gislib.js"
 }
