@@ -1,9 +1,9 @@
-// Type definitions for geolib v2.0.22
-// Project: https://github.com/manuelbieh/Geolib
+// Type definitions for gislib v2.0.22
+// Project: https://github.com/ramsestom/Gislib
 // Definitions by: Vladimir Venegas <https://github.com/vvenegasv>
 // Definitions: 
 
-declare namespace geolib {    
+declare namespace gislib {    
 
     export interface PositionAsDecimal {
         latitude: number,
@@ -269,6 +269,6 @@ declare namespace geolib {
     function computeDestinationPoint(start: PositionAsDecimal, distance: number, bearing: number, radius: number): PositionAsDecimal;
 }
 
-declare module "geolib" {
-  export = geolib;
+declare module "gislib" {
+  export = gislib;
 }
